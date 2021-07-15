@@ -2,7 +2,7 @@ CROSS_COMPILE      ?= riscv64-unknown-elf-
 
 AR                 = $(CROSS_COMPILE)ar
 
-CFLAGS             = -mcmodel=medany -ffunction-sections -fdata-sections -fcommon
+CFLAGS             = -mcmodel=medany -ffunction-sections -fdata-sections -fcommon -g
 LDFLAGS            = -nostartfiles -nostdlib -nostdinc -static -lgcc \
                      -Wl,--nmagic -Wl,--gc-sections
 INCLUDES           = -Ienv/common
