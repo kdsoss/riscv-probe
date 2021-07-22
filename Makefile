@@ -2,7 +2,8 @@ CROSS_COMPILE      ?= riscv64-unknown-elf-
 
 AR                 = $(CROSS_COMPILE)ar
 
-CFLAGS             = -mcmodel=medany -ffunction-sections -fdata-sections -fcommon -g
+CFLAGS             = -mcmodel=medany -ffunction-sections -fdata-sections -fcommon \
+		     -g -fno-omit-frame-pointer
 LDFLAGS            = -nostartfiles -nostdlib -nostdinc -static -lgcc \
                      -Wl,--nmagic -Wl,--gc-sections
 INCLUDES           = -Ienv/common
@@ -24,7 +25,7 @@ libs               = libfemto
 configs            = rv32imac rv64imac
 
 CC_rv32imac        = $(CROSS_COMPILE)gcc
-CFLAGS_rv32imac    = -Os -march=rv32imac -mabi=ilp32 -Ienv/common/rv32
+CFLAGS_rv32imac    = -Os -march=rv32ima -mabi=ilp32 -Ienv/common/rv32
 LDFLAGS_rv32imac   =
 
 CC_rv64imac        = $(CROSS_COMPILE)gcc
