@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#define FREQ	25000000
+#define FREQ	15000
+//#define FREQ	25000000
 #define HZ	(FREQ/8)
 
 void sleep(int sec)
@@ -12,7 +13,7 @@ void sleep(int sec)
 int main(int argc, char **argv)
 {
 	int count = 0;
-	for (;;) {
+	for (; count < 5;) {
 		printf("Hello Arty: %d\n", count++);
 		sleep(1);
 	}

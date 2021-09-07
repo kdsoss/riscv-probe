@@ -12,6 +12,7 @@ PHDRS
   text PT_LOAD;
   data PT_LOAD;
   bss PT_LOAD;
+  htif PT_LOAD;
 }
 
 SECTIONS
@@ -40,6 +41,11 @@ SECTIONS
     *(.sbss .sbss.*) *(.bss .bss.*)
     PROVIDE(_bss_end = .);
   } >ram AT>ram :bss
+
+  .htif   : {
+    . = ALIGN(4096);
+    *(.htif)
+  } >ram AT>ram :text
 
   PROVIDE(_memory_start = ORIGIN(ram));
   PROVIDE(_memory_end = ORIGIN(ram) + LENGTH(ram));
