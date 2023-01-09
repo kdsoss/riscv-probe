@@ -29,7 +29,11 @@ enum {
     UART_LSR_EF   = 0x80,  /* Erroneous data in FIFO */
 };
 
+#ifdef PICCOLO
+static volatile uint32_t *uart;
+#else
 static volatile uint8_t *uart;
+#endif
 
 static void ns16550a_init()
 {

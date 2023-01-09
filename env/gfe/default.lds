@@ -4,7 +4,7 @@ ENTRY( _start )
 
 MEMORY
 {
-  ram   : ORIGIN = 0x80000000, LENGTH = 128M
+  ram   : ORIGIN = 0xC0000000, LENGTH = 128M
 }
 
 PHDRS
@@ -12,7 +12,6 @@ PHDRS
   text PT_LOAD;
   data PT_LOAD;
   bss PT_LOAD;
-  htif PT_LOAD;
 }
 
 SECTIONS
@@ -27,11 +26,6 @@ SECTIONS
     PROVIDE(_rodata_start = .);
     *(.rodata .rodata.*)
     PROVIDE(_rodata_end = .);
-  } >ram AT>ram :text
-
-  .htif   : {
-    . = ALIGN(4096);
-    *(.htif)
   } >ram AT>ram :text
 
   .data : {

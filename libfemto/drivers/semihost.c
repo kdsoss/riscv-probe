@@ -25,7 +25,9 @@ static inline long semihost_call1(long n, long a)
 {
     register long a7 __asm__("a7") = n;
     register long a0 __asm__("a0") = a;
+#ifndef __clang__
     __syscall("r"(a7), "0"(a0));
+#endif
     return a0;
 }
 

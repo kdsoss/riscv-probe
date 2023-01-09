@@ -2,9 +2,11 @@ CROSS_COMPILE      ?= riscv64-unknown-elf-
 
 AR                 = $(CROSS_COMPILE)ar
 
-CFLAGS             = -mcmodel=medany -ffunction-sections -fdata-sections
-LDFLAGS            = -nostartfiles -nostdlib -nostdinc -static -lgcc \
-                     -Wl,--nmagic -Wl,--gc-sections
+CFLAGS             = -g -fcommon -mcmodel=medany -ffunction-sections -fdata-sections \
+		     -mno-relax -ffreestanding
+LDFLAGS            = -nostartfiles -nostdlib -nostdinc -static \
+                     -Wl,--nmagic -Wl,--gc-sections \
+		     -fuse-ld=lld
 INCLUDES           = -Ienv/common
 
 libfemto_dirs      = libfemto/std libfemto/drivers libfemto/arch/riscv
@@ -21,17 +23,33 @@ subdirs            = examples
 
 libs               = libfemto
 
-configs            = rv32imac rv64imac
+configs            = rv32imac rv32imac_clang rv32imac_piccolo rv64imac_piccolo
 
-CC_rv32imac        = $(CROSS_COMPILE)gcc
+CC_rv32imac        = riscv64-unknown-elf-gcc
 CFLAGS_rv32imac    = -Os -march=rv32imac -mabi=ilp32 -Ienv/common/rv32
 LDFLAGS_rv32imac   =
+
+CC_rv32imac_clang        = $(CROSS_COMPILE)clang
+CFLAGS_rv32imac_clang    = -Os --target=riscv32 -march=rv32imac -mabi=ilp32 -Ienv/common/rv32
+LDFLAGS_rv32imac_clang   =
+
+CC_rv32imac_piccolo        = $(CROSS_COMPILE)clang
+CFLAGS_rv32imac_piccolo    = -Os --target=riscv32 -march=rv32imac -mabi=ilp32 -Ienv/common/rv32 -DPICCOLO
+LDFLAGS_rv32imac_piccolo   =
+
+CC_rv64imac_piccolo        = $(CROSS_COMPILE)clang
+CFLAGS_rv64imac_piccolo    = -Os --target=riscv64 -march=rv64imac -mabi=lp64 -Ienv/common/rv64 -DPICCOLO
+LDFLAGS_rv64imac_piccolo   =
 
 CC_rv64imac        = $(CROSS_COMPILE)gcc
 CFLAGS_rv64imac    = -Os -march=rv64imac -mabi=lp64  -Ienv/common/rv64
 LDFLAGS_rv64imac   =
 
-targets            = rv32imac:default \
+targets            = rv32imac:virt rv32imac_clang:virt \
+			rv32imac_piccolo:piccolo rv32imac_piccolo:gfe \
+			rv64imac_piccolo:piccolo rv64imac_piccolo:gfe
+
+targets1            = rv32imac:default \
                      rv64imac:default \
                      rv32imac:spike \
                      rv64imac:spike \

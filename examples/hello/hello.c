@@ -2,5 +2,8 @@
 
 int main(int argc, char **argv)
 {
-	printf("hello\n");
+	int i = 0;
+	for (;;) {
+		printf("hello: %d\n", i++);
+	}
 }

@@ -28,10 +28,12 @@ uintptr_t memory_probe_range(uintptr_t start, uintptr_t end)
     for (; p < (uintptr_t *)end; p += RISCV_PGSIZE) {
         /* trap_save_cause adds 4 to the PC so we
          * can't emit compressed instructions */
+#ifndef __clang__
         asm volatile (".option push");
         asm volatile (".option norvc");
         asm volatile ("" : : "r" (*p));
         asm volatile (".option pop");
+#endif
         if (save_cause != -1) {
             break;
         }
