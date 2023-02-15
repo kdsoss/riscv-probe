@@ -38,6 +38,7 @@ static volatile uint8_t *uart;
 static void ns16550a_init()
 {
 	uart = (uint8_t *)(void *)getauxval(NS16550A_UART0_CTRL_ADDR);
+#if 0
 	uint32_t uart_freq = getauxval(UART0_CLOCK_FREQ);
 	uint32_t baud_rate = getauxval(UART0_BAUD_RATE);
     uint32_t divisor = uart_freq / (16 * baud_rate);
@@ -45,6 +46,7 @@ static void ns16550a_init()
     uart[UART_DLL] = divisor & 0xff;
     uart[UART_DLM] = (divisor >> 8) & 0xff;
     uart[UART_LCR] = UART_LCR_PODD | UART_LCR_8BIT;
+#endif
 }
 
 static int ns16550a_getchar()

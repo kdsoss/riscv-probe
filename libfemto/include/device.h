@@ -28,6 +28,7 @@ extern console_device_t console_htif;
 extern console_device_t console_ns16550a;
 extern console_device_t console_sifive_uart;
 extern console_device_t console_semihost;
+extern console_device_t console_pl011;
 
 extern poweroff_device_t poweroff_none;
 extern poweroff_device_t poweroff_htif;

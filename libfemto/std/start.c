@@ -1,8 +1,8 @@
 // See LICENSE for license details.
 
 #include "femto.h"
-#include "arch/riscv/encoding.h"
-#include "arch/riscv/machine.h"
+//#include "arch/riscv/encoding.h"
+//#include "arch/riscv/machine.h"
 
 extern char _bss_start;
 extern char _bss_end;

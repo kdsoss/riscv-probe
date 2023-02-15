@@ -1,19 +1,14 @@
-CROSS_COMPILE      ?= riscv64-unknown-elf-
+#CROSS_COMPILE      ?= riscv64-unknown-elf-
 
 AR                 = $(CROSS_COMPILE)ar
 
-CFLAGS             = -g -fcommon -mcmodel=medany -ffunction-sections -fdata-sections \
-		     -mno-relax -ffreestanding
-LDFLAGS            = -nostartfiles -nostdlib -nostdinc -static \
-                     -Wl,--nmagic -Wl,--gc-sections \
-		     -fuse-ld=lld
-INCLUDES           = -Ienv/common
+CFLAGS             = -fcommon -ffunction-sections -fdata-sections \
+		     -ffreestanding -mno-relax
+LDFLAGS            = -nostartfiles -nostdlib -nostdinc -pie \
+                     -Wl,--nmagic -Wl,--gc-sections -Wl,--build-id=none \
+		     -fuse-ld=lld #-Wl,--apply-dynamic-relocs
 
-libfemto_dirs      = libfemto/std libfemto/drivers libfemto/arch/riscv
-libfemto_src       = $(sort $(foreach d,$(libfemto_dirs),$(wildcard $(d)/*.c)))
-libfemto_asm       = $(sort $(foreach d,$(libfemto_dirs),$(wildcard $(d)/*.s)))
-libfemto_objs      = $(patsubst %.s,%.o,$(libfemto_asm)) \
-                     $(patsubst %.c,%.o,$(libfemto_src))
+INCLUDES           = -Ienv/common
 
 #
 # Compiler configurations and target environment definitions
@@ -23,7 +18,7 @@ subdirs            = examples
 
 libs               = libfemto
 
-configs            = rv32imac rv32imac_clang rv32imac_piccolo rv64imac_piccolo
+configs            = rv32imac rv32imac_clang rv32imac_piccolo rv64imac_piccolo aarch64
 
 CC_rv32imac        = riscv64-unknown-elf-gcc
 CFLAGS_rv32imac    = -Os -march=rv32imac -mabi=ilp32 -Ienv/common/rv32
@@ -45,9 +40,33 @@ CC_rv64imac        = $(CROSS_COMPILE)gcc
 CFLAGS_rv64imac    = -Os -march=rv64imac -mabi=lp64  -Ienv/common/rv64
 LDFLAGS_rv64imac   =
 
-targets            = rv32imac:virt rv32imac_clang:virt \
+CC_aarch64        = $(CROSS_COMPILE)clang
+CFLAGS_aarch64    = -Os --target=aarch64-unknown-linux-gnu -mgeneral-regs-only -Ienv/common/aarch64 -DPICCOLO
+LDFLAGS_aarch64   =
+ARCH_aarch64      = aarch64
+
+define objs =
+ifeq ($(ARCH_$(1)),)
+libfemto_arch_$(1) = riscv
+else
+libfemto_arch_$(1) = $(ARCH_$(1))
+endif
+libfemto_dirs_$(1) = libfemto/std libfemto/drivers libfemto/arch/$$(libfemto_arch_$(1))
+libfemto_src_$(1)  = $$(sort $$(foreach d,$$(libfemto_dirs_$(1)),$$(wildcard $$(d)/*.c)))
+libfemto_asm_$(1)  = $$(sort $$(foreach d,$$(libfemto_dirs_$(1)),$$(wildcard $$(d)/*.s)))
+libfemto_objs_$(1) = $$(patsubst %.s,%.o,$$(libfemto_asm_$(1))) \
+                     $$(patsubst %.c,%.o,$$(libfemto_src_$(1)))
+endef
+
+$(foreach c,$(configs),$(eval $(call objs,$(c))))
+
+
+targets0            = rv32imac:virt rv32imac_clang:virt \
 			rv32imac_piccolo:piccolo rv32imac_piccolo:gfe \
 			rv64imac_piccolo:piccolo rv64imac_piccolo:gfe
+
+targets	= \
+		rv32imac_clang:virt aarch64:rockchip aarch64:qemu-aarch64
 
 targets1            = rv32imac:default \
                      rv64imac:default \
@@ -73,6 +92,8 @@ clean:
 backup: clean
 	tar czf ../$(shell basename $(shell pwd)).tar.gz .
 
+%.lds: %.lds.S
+	$(CC) -E -P -D__ASSEMBLY__ -DLINKER_SCRIPT -o $@ $<
 #
 # To view commands use: make V=1
 #
@@ -101,7 +122,7 @@ $(foreach c,$(configs),$(eval $(call pattern,AS,$(c),s)))
 #
 
 define archive =
-build/lib/$(2)/$(3).a: $(addprefix build/obj/$(2)/,$($(3)_objs))
+build/lib/$(2)/$(3).a: $(addprefix build/obj/$(2)/,$($(3)_objs_$(2)))
 	$(call cmd,$(1).$(2) $$@,$$(@D),$(AR) cr $$@ $$^)
 LIBS_$(2) += build/lib/$(2)/$(3).a
 endef
@@ -127,9 +148,10 @@ config_env = $(word 2,$(subst :, ,$(1)))
 
 define rule =
 build/bin/$(3)/$(4)/$(1): \
-build/obj/$(3)/env/$(4)/crt.o build/obj/$(3)/env/$(4)/setup.o $(2) $$(LIBS_$(3))
+build/obj/$(3)/env/$(4)/crt.o build/obj/$(3)/env/$(4)/setup.o $(2) $$(LIBS_$(3)) \
+	env/$(4)/default.lds
 	$$(call cmd,LD.$(3) $$@,$$(@D),$(CC_$(3)) $(CFLAGS_$(3)) $$(CFLAGS) \
-	$$(LDFLAGS_$(3)) $$(LDFLAGS) -T env/$(4)/default.lds $$^ -o $$@)
+	$$(LDFLAGS_$(3)) $$(LDFLAGS) -T env/$(4)/default.lds $$(filter-out env/$(4)/default.lds, $$^) -o $$@)
 endef
 
 define module =
